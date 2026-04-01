@@ -1,0 +1,1548 @@
+{
+  "name": "Turf Booking Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2016,
+        32
+      ],
+      "id": "809e5444-1fc0-4d1f-ad57-f2a5c4ee65f5",
+      "name": "Telegram Trigger",
+      "webhookId": "37364729-b461-447c-8ede-c0a4933040de",
+      "credentials": {
+        "telegramApi": {
+          "id": "0q8Eb9L5zzlcLPaD",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.message.text || \"\";\nconst chatId = $json.message.chat.id;\n\nreturn [{\n  chatId,\n  text: msg.trim().toLowerCase()\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1824,
+        48
+      ],
+      "id": "cfbd3b42-198e-48a9-9e6c-0794569954b6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $json.chatId;\n\n// If no rows from sheet\nif (items.length === 0) {\n  return [{\n    chatId,\n    stage: \"new\"\n  }];\n}\n\n// Convert all rows\nconst rows = items.map(i => i.json);\n\n// Find matching user\nconst user = rows.find(r => String(r.chatId) === String(chatId));\n\nif (!user) {\n  return [{\n    chatId,\n    stage: \"new\"\n  }];\n}\n\nreturn [{\n  chatId,\n  stage: user.stage || \"new\",\n  slotNumber: user.slotNumber || \"\"\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        -48
+      ],
+      "id": "48d7c225-94e1-415b-b652-a0d50d5e08e9",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1552,
+        176
+      ],
+      "id": "6cb19774-b98f-412b-80ab-cf969617415f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.text === \"/start\"}}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "7b8a7867-254c-468b-a2b2-6b0ae9e274d6"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9afeaf6a-927f-4473-8301-4d5a5a8b383f",
+                    "leftValue": "={{$json.text === \"book\"}}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "26f32180-a6fa-40e9-b812-d0603fd03072",
+                    "leftValue": "={{ /^[0-9]+$/.test($json.text.trim()) || $json.stage === \"select_slot\" }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3cb43ed6-730d-4d94-b943-8e110db0e8b0",
+                    "leftValue": "={{$json.text.split(\" \").length >= 2}}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1328,
+        208
+      ],
+      "id": "2bca0ad0-78fa-4fbd-ad0a-6c5f237f337f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        16
+      ],
+      "id": "f67ae306-3f8a-40fd-ba10-96775299add1",
+      "name": "Send a text message",
+      "webhookId": "bbec5cf4-f62f-4207-8627-bcce97f87d0e",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "0q8Eb9L5zzlcLPaD",
+          "name": "Telegram account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Slots",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -656,
+        160
+      ],
+      "id": "733375ac-01c1-4e94-9700-84597260f333",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get chatId directly from Telegram Trigger\nconst triggerChatId = $items(\"Telegram Trigger\")[0].json.message.chat.id;\n\n// Filter available slots\nconst slots = items.filter(function(i) {\n  return i.json.Status && i.json.Status.toLowerCase() === \"available\";\n});\n\nlet text = \"\";\n\nif (!slots || slots.length === 0) {\n  text = \"All slots are booked ❌\";\n} else {\n  text = \"Available slots:\\n\";\n\n  for (let i = 0; i < slots.length; i++) {\n    const slotNumber = slots[i].json.ID;\n    const slotTime = slots[i].json.Time;\n\n    text += (i + 1) + \". \" + slotNumber + \" (\" + slotTime + \")\\n\";\n  }\n\n  text += \"\\nReply with slot number.\";\n}\n\n// Return\nreturn [\n  {\n    json: {\n      chatId: triggerChatId,\n      text: text\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        160
+      ],
+      "id": "c5394ac4-e280-42a2-a505-fcd65eb893d9",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get user input number\nconst num = parseInt($json.text);\n\n// Invalid input\nif (isNaN(num)) {\n  return [\n    {\n      json: {\n        chatId: $json.chatId,\n        text: \"Invalid input ❌\"\n      }\n    }\n  ];\n}\n\n// Find matching row (ID match)\nconst match = items.find(item => String(item.json.ID).trim() === String(num));\n\n// If no match\nif (!match) {\n  return [\n    {\n      json: {\n        chatId: $json.chatId,\n        text: \"Invalid slot ❌\"\n      }\n    }\n  ];\n}\n\n// ✅ Return ID + Time\nreturn [\n  {\n    json: {\n      chatId: $json.chatId,\n      ID: match.json.ID,\n      Time: match.json.Time\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        400
+      ],
+      "id": "be5011e6-4baf-4cf2-b1ca-18b83eeb1377",
+      "name": "Code in JavaScript3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "stage": "enter_details",
+            "slotNumber": "={{ $json.slotNumber }}",
+            "selectedTime": "={{ $json.selectedTime }}",
+            "chatId": "={{ $json.chatId }}"
+          },
+          "matchingColumns": [
+            "chatId"
+          ],
+          "schema": [
+            {
+              "id": "chatId",
+              "displayName": "chatId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "slotNumber",
+              "displayName": "slotNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "selectedTime",
+              "displayName": "selectedTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -512,
+        304
+      ],
+      "id": "f0d9d47c-6acd-4ce6-b6ab-4a24d3aa3237",
+      "name": "Update row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Update row in sheet').item.json.chatId }}",
+        "text": "=Your Selected Slot Number: {{ $json.ID }}\n\nYour Selected Slot Time: {{ $json.Time }}\n\nSend Your Name And Phone Number For Confirmation...\n\nExample:\n      Hasik 98675849xx",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        288
+      ],
+      "id": "1078a2ff-1ee1-46d6-a467-61adc60f600f",
+      "name": "Send a text message2",
+      "webhookId": "61e46b7d-613e-4341-8e20-95f9238e5829",
+      "credentials": {
+        "telegramApi": {
+          "id": "0q8Eb9L5zzlcLPaD",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parts = $json.text.split(\" \");\n\nreturn [{\n  chatId: $json.chatId,\n  name: parts[0],\n  phone: parts[1]\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        416
+      ],
+      "id": "c00c79ce-fabf-4656-9a29-b7c8be073a3b",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -960,
+        416
+      ],
+      "id": "080cc6a7-30b7-4ac9-9a2b-b2e4b4203615",
+      "name": "Get row(s) in sheet3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Slots",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID",
+              "lookupValue": "={{ $json.slotNumber }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -768,
+        416
+      ],
+      "id": "c4315a6a-9670-48ef-96b6-d5f6ca5ce28d",
+      "name": "Get row(s) in sheet4",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Slots",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "booked",
+            "ID": "={{ $json.slotNumber }}",
+            "Time": "={{ $json.selectedTime }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        272
+      ],
+      "id": "60be2774-70dd-4646-b154-dad642d10fc9",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 258584996,
+          "mode": "list",
+          "cachedResultName": "Bookings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=258584996"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Code in JavaScript5').item.json.name }}",
+            "Phone": "={{ $('Code in JavaScript5').item.json.phone }}",
+            "Time": "={{ $json.Time }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -464,
+        416
+      ],
+      "id": "580e2f77-1f97-40a2-b9e2-4a799a93975c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -144,
+        416
+      ],
+      "id": "cf868b43-15ad-4b47-8d37-f0a2370b8569",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=✅ Booking Confirmed!\n\nYour Slot Time: {{ $('Append row in sheet').item.json.Time }}\nThanks You...{{ $('Code in JavaScript5').item.json.name }}\n\nLet's Enjoy your Games...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        416
+      ],
+      "id": "f57fdad7-db08-400b-a9c5-ba09dce979fa",
+      "name": "Send a text message3",
+      "webhookId": "eba51cef-ca29-49c2-a8b8-9109d789e67d",
+      "credentials": {
+        "telegramApi": {
+          "id": "0q8Eb9L5zzlcLPaD",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Code in JavaScript2').item.json.chatId }}",
+        "text": "={{ $('Code in JavaScript2').item.json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        160
+      ],
+      "id": "5487c0d3-27c4-4d32-8b55-6b5cf3aae2b3",
+      "name": "Send a text message1",
+      "webhookId": "4dc6a91e-9afd-44da-bbca-6a76a8b773ec",
+      "credentials": {
+        "telegramApi": {
+          "id": "0q8Eb9L5zzlcLPaD",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get chatId from Telegram Trigger\nconst chatId = $items(\"Telegram Trigger\")[0].json.message.chat.id;\n\n// Current stage (from previous node / sheet)\nconst currentStage = $json.stage;\n\n// Get slot data\nconst slot = items[0]?.json;\n\n// ❗ If no slot OR already booked\nif (!slot || !slot.Status || slot.Status.toLowerCase() !== \"available\") {\n\n  // If already in start → move to select_slot\n  const nextStage = currentStage === \"start\" ? \"select_slot\" : \"start\";\n\n  return [\n    {\n      json: {\n        chatId: chatId,\n        stage: nextStage,   // ✅ toggle logic\n        slotNumber: slot?.ID || \"\",\n        selectedTime: slot?.Time || \"\"\n      }\n    }\n  ];\n}\n\n// ✅ Success\nreturn [\n  {\n    json: {\n      chatId: chatId,\n      stage: \"enter_details\",\n      slotNumber: slot.ID,\n      selectedTime: slot.Time\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        160
+      ],
+      "id": "5fb72f0b-30fa-4943-ac04-f1d0c0e86b47",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get chatId from Telegram Trigger\nconst chatId = $items(\"Telegram Trigger\")[0].json.message.chat.id;\n\n// All rows from sheet\nconst rows = items;\n\n// 🔥 Check if ALL slots are booked\nconst allBooked = rows.every(function(item) {\n  return item.json.Status && item.json.Status.toLowerCase() === \"booked\";\n});\n\n// ❌ If all slots booked → message + chatId\nif (allBooked) {\n  return [\n    {\n      json: {\n        chatId: chatId,   // ✅ FIX\n        text: \"All slots are booked ❌\"\n      }\n    }\n  ];\n}\n\n// Check existing user\nconst existingUser = rows.find(function(item) {\n  return item.json.chatId == chatId;\n});\n\n// ❌ Already exists → message + chatId\nif (existingUser) {\n  return [\n    {\n      json: {\n        chatId: chatId,   // ✅ FIX\n        text: \"Already booked ❌\"\n      }\n    }\n  ];\n}\n\n// ✅ New user → full data\nreturn [\n  {\n    json: {\n      chatId: chatId,\n      stage: \"start\",\n      slotNumber: \"\",\n      selectedTime: \"\",\n      text: \"Welcome to Turf Booking ⚽...\\n\\nType \\\"book\\\" to start\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        48
+      ],
+      "id": "d579c130-7e6c-4e12-8dab-1d3518f6598f",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        -208
+      ],
+      "id": "5a1b1531-dd32-4d35-b74d-1adafcf81c20",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "stage": "={{ $('Code in JavaScript7').item.json.stage }}",
+            "chatId": "={{ $('Code in JavaScript7').item.json.chatId }}"
+          },
+          "matchingColumns": [
+            "stage"
+          ],
+          "schema": [
+            {
+              "id": "chatId",
+              "displayName": "chatId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "slotNumber",
+              "displayName": "slotNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "selectedTime",
+              "displayName": "selectedTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        336,
+        0
+      ],
+      "id": "1acac94b-34d6-4d81-9975-8ee7c635377b",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        160,
+        160
+      ],
+      "id": "7075c4b8-ec56-4237-b021-69c122db5fd5",
+      "name": "Get row(s) in sheet5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 0,
+            "chatId": "={{ $json.chatId }}",
+            "stage": "={{ $json.stage }}"
+          },
+          "matchingColumns": [
+            "chatId"
+          ],
+          "schema": [
+            {
+              "id": "chatId",
+              "displayName": "chatId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "slotNumber",
+              "displayName": "slotNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "selectedTime",
+              "displayName": "selectedTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        160
+      ],
+      "id": "f926d321-1eca-4ca6-8447-0e571fe80237",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1049998246,
+          "mode": "list",
+          "cachedResultName": "Temp",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=1049998246"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        0
+      ],
+      "id": "ff3dfd63-8337-4bb7-a556-354bfae8db32",
+      "name": "Get row(s) in sheet6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Slots",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -912,
+        0
+      ],
+      "id": "4349e316-296d-47e4-9f1d-161166ecf086",
+      "name": "Get row(s) in sheet7",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "418551b3-afd8-445a-bbf6-f0d51df9bb52",
+              "leftValue": "={{ $('Code in JavaScript7').item.json.stage }}",
+              "rightValue": "start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -272,
+        -160
+      ],
+      "id": "67cedb1c-883c-4f0c-ace5-c88f1d63e05a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.result.chat.id }}",
+        "text": "Book Your Slot Tomorrow...",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "410c796f-7615-473a-a44e-82f9b66e6792",
+      "name": "Send a text message4",
+      "webhookId": "8651a1ca-31ff-4e14-ae9c-fe87b1063497",
+      "credentials": {
+        "telegramApi": {
+          "id": "0q8Eb9L5zzlcLPaD",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Slots",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1888,
+        400
+      ],
+      "id": "a0dd55c4-38fb-431b-902c-6cfd9dfcb911",
+      "name": "Get row(s) in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get chatId directly from Telegram Trigger\nconst chatId = $items(\"Telegram Trigger\")[0].json.message.chat.id;\n\n// Get the single row from Get Row node\nconst slot = items[0].json;\n\n// Check if slot exists\nif (!slot) {\n  return [\n    {\n      json: {\n        chatId: chatId,\n        text: \"Invalid slot ❌\"\n      }\n    }\n  ];\n}\n\n// Check if already booked\nif (!slot.Status || slot.Status.toLowerCase() !== \"available\") {\n  return [\n    {\n      json: {\n        chatId: chatId,\n        text: \"Already booked ❌\"\n      }\n    }\n  ];\n}\n\n// Success\nreturn [\n  {\n    json: {\n      chatId: chatId,\n      text: \"Slot selected ✅\",\n      selectedTime: slot.Time,\n      slotId: slot.ID,\n      slotNumber: slot.ID\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        304
+      ],
+      "id": "e1607a0c-b66d-42bb-a2ae-807467f6fa16",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98",
+          "mode": "list",
+          "cachedResultName": "Turf Auto Slot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Slots",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AckQcJtm7wyzumJc-hGg45MZYbqkuHAp7wq5haN6Q98/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID",
+              "lookupValue": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        304
+      ],
+      "id": "a39c40d0-42fa-46e9-91a4-d590d9d2cb18",
+      "name": "Get row(s) in sheet8",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "psLZowfyVaYxKos0",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        []
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet4": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet6": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet7": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet8": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "a800d1c8-81cc-4137-ac60-dcebc24f3cab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "597ac7c3e421119e0dca4d4ebaab55a227837733dc076ac834b4006c3474a2e0"
+  },
+  "id": "HmuI9NACO5VR6UeW2uSt2",
+  "tags": []
+}
